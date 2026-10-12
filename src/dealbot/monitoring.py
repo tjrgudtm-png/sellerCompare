@@ -107,6 +107,7 @@ class RunStats:
     match_high: int = 0
     match_medium: int = 0
     match_low: int = 0
+    option_checked: int = 0
     deals_found: int = 0
     posted: int = 0
     post_failed: int = 0

@@ -144,7 +144,13 @@ class ProductMatcher:
                     conflicts.append("이미지 상이")
 
         if conflicts:
-            return MatchResult(MatchLevel.LOW, conflicts + reasons, basis, sim)
+            # 충돌이 '수량 불일치' 하나뿐이고 같은 품목임이 확인되면 개당 가격 비교 대상으로 표시
+            pack_only = (qty_ok is False and len(conflicts) == 1 and brand_ok and sim >= self.min_high
+                         and ta.bundle_keywords == ca.bundle_keywords and (model_ok or spec_ok is True)
+                         and not (ta.colors and not ca.colors))
+            if pack_only:
+                basis = basis + (["동일 용량"] if spec_ok else []) + ["묶음 수량만 다름"]
+            return MatchResult(MatchLevel.LOW, conflicts + reasons, basis, sim, pack_only_diff=pack_only)
         if sim < self.min_low:
             return MatchResult(MatchLevel.LOW, ["상품명 유사도 낮음"] + reasons, basis, sim)
 

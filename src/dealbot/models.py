@@ -24,6 +24,12 @@ class DealGrade(str, Enum):
     NORMAL = "NORMAL"
 
 
+class DealType(str, Enum):
+    COUPANG = "coupang"   # 쿠팡 동일 구성 상품과 비교 (S/A 등급)
+    UNIT = "unit"         # 쿠팡 동일 품목, 묶음 수량만 다름 → 개당 가격 비교
+    OPTION = "option"     # 같은 토스 상품 안에서 특정 옵션만 크게 저렴
+
+
 @dataclass
 class ProductAttributes:
     """상품명/옵션에서 추출한 비교용 속성. 추출하지 못한 값은 None/빈 집합."""
@@ -38,6 +44,13 @@ class ProductAttributes:
     colors: frozenset[str] = frozenset()
     bundle_keywords: frozenset[str] = frozenset()
     tokens: frozenset[str] = frozenset()
+
+
+@dataclass
+class TossOption:
+    name: str
+    price: int | None          # 옵션 선택 시 상품가 (추가금 방식이면 기본가+추가금으로 환산된 값)
+    sold_out: bool | None = None
 
 
 @dataclass
@@ -56,6 +69,7 @@ class TossProduct:
     share_url: str | None = None         # 쉐어링크 발급 URL (게시용)
     image_url: str | None = None
     source: str | None = None            # 수집 출처 (best, daily_deal ...)
+    options: list[TossOption] = field(default_factory=list)
     raw: dict = field(default_factory=dict, repr=False)
 
     @property
@@ -107,6 +121,8 @@ class MatchResult:
     reasons: list[str]
     basis: list[str] = field(default_factory=list)  # 메시지용 비교 기준 (예: "동일 모델")
     score: float = 0.0
+    # 수량만 다르고 나머지(브랜드·모델/개당 용량·구성)는 같은 품목 → 개당 가격 비교 가능
+    pack_only_diff: bool = False
 
 
 @dataclass
@@ -118,6 +134,11 @@ class Comparison:
     grade: DealGrade | None = None
     valid: bool = False
     reason: str | None = None
+    # 개당 비교일 때만 채움
+    toss_count: int | None = None
+    coupang_count: int | None = None
+    toss_unit: Decimal | None = None
+    coupang_unit: Decimal | None = None
 
 
 @dataclass
@@ -128,3 +149,13 @@ class DealCandidate:
     comparison: Comparison | None
     eligible: bool = False
     reject_reasons: list[str] = field(default_factory=list)
+    deal_type: DealType = DealType.COUPANG
+    # 옵션 특가일 때: 특가 옵션들(같은 최저가)과 비교에 쓴 다른 옵션 수
+    deal_options: list[TossOption] = field(default_factory=list)
+    compared_option_count: int = 0
+
+    @property
+    def grade_label(self) -> str:
+        if self.deal_type == DealType.COUPANG and self.comparison and self.comparison.grade:
+            return self.comparison.grade.value
+        return self.deal_type.value.upper()

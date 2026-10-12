@@ -70,6 +70,12 @@ DEFAULTS: dict[str, Any] = {
             "url": "productUrl",
             "sold_out": "soldOut",
             "image": "imageUrl",
+            # 옵션별 가격 (응답에 있을 때만 옵션 특가 판정). 실제 응답 구조로 확인 필요
+            "options_path": "options",
+            "option_item_name": ["name"],
+            "option_item_price": "price",
+            "option_item_sold_out": "soldOut",
+            "option_price_mode": "absolute",   # absolute | delta(추가금)
         },
         "allowed_url_hosts": ["toss.im", "tossshopping.com", "toss.shop"],
     },
@@ -96,6 +102,17 @@ DEFAULTS: dict[str, Any] = {
             "A": {"min_rate": 20, "min_amount": 10000},
         },
         "publish_grades": ["S", "A"],
+        # 같은 상품 안에서 특정 옵션만 다른 옵션들보다 크게 싼 경우
+        "option_outlier": {
+            "enabled": True,
+            "min_rate": 40,
+            "min_amount": 5000,
+            "min_options": 3,
+            "exclude_keywords": ["추가구성", "추가 구성", "추가상품", "단품", "샘플", "체험", "소량", "부속",
+                                 "리필", "케이스만", "사은품", "증정", "낱개", "액세서리"],
+        },
+        # 쿠팡 동일 품목이 묶음 수량만 다를 때 개당 가격 비교
+        "unit_price": {"enabled": True, "min_rate": 40, "min_amount": 5000},
     },
     "repost": {
         "on_grade_upgrade": True,

@@ -87,6 +87,19 @@ def parse_fee(value: Any) -> int | None:
     return int(digits) if digits else None
 
 
+def parse_signed_int(value: Any) -> int | None:
+    """옵션 추가금처럼 0/음수가 유효한 금액 파싱 ("+3,000원", "-2000", 0). 파싱 불가는 None."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float, Decimal)):
+        return int(value)
+    m = re.search(r"([+-]?)\s*([\d,]+)", str(value))
+    if not m:
+        return None
+    num = int(m.group(2).replace(",", ""))
+    return -num if m.group(1) == "-" else num
+
+
 def parse_bool(value: Any) -> bool | None:
     if isinstance(value, bool):
         return value

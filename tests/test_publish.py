@@ -138,3 +138,12 @@ def test_kakao_hourly_cap_and_gap():
     win.text = ""
     pub.publish("b")
     assert slept and slept[0] > 25
+
+
+def test_product_matching_two_deal_types_posted_once_per_run(cfg, repo):
+    from dealbot.models import TossOption
+    t = toss(options=[TossOption(n, p) for n, p in [("a", 59900), ("b", 59900), ("c", 59900), ("d", 29900)]])
+    p, pub, _ = make_pipeline(cfg, repo, [t], [offer()])
+    stats = p.run_once()
+    assert stats.deals_found == 2 and stats.posted == 1 and len(pub.sent) == 1
+    assert "[S급 특가]" in pub.sent[0]   # S급 쿠팡 비교가 옵션 특가보다 우선

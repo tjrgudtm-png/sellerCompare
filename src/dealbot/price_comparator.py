@@ -36,6 +36,26 @@ class PriceComparator:
         rate = Decimal(diff) * 100 / Decimal(coupang_final)
         return Comparison(toss_final, coupang_final, diff, rate, self.grade(diff, rate), valid=True)
 
+    def compare_unit(self, toss_final: int | None, toss_count: int | None,
+                     coupang_final: int | None, coupang_count: int | None) -> Comparison:
+        """묶음 수량이 다른 동일 품목의 개당 가격 비교.
+
+        절감률 = (쿠팡 개당가 - 토스 개당가) / 쿠팡 개당가 × 100
+        차액   = (쿠팡 개당가 - 토스 개당가) × 토스 수량  (토스 상품 1개 구매 시 아끼는 금액)
+        등급(S/A)은 매기지 않는다 - 개당 특가 기준은 DealFilter 에서 적용.
+        """
+        base = self.compare(toss_final, coupang_final)
+        if not base.valid:
+            return base
+        if not toss_count or not coupang_count or toss_count <= 0 or coupang_count <= 0:
+            return Comparison(toss_final, coupang_final, reason="수량 미확인 - 개당 비교 불가")
+        tu = Decimal(toss_final) / toss_count
+        cu = Decimal(coupang_final) / coupang_count
+        rate = (cu - tu) * 100 / cu
+        diff = int(((cu - tu) * toss_count).to_integral_value(rounding=ROUND_HALF_UP))
+        return Comparison(toss_final, coupang_final, diff, rate, None, valid=True,
+                          toss_count=toss_count, coupang_count=coupang_count, toss_unit=tu, coupang_unit=cu)
+
     def grade(self, diff: int, rate: Decimal) -> DealGrade:
         if rate >= self.s_rate and diff >= self.s_amount:
             return DealGrade.S

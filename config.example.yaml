@@ -67,6 +67,12 @@ toss:
     url: productUrl
     sold_out: soldOut           # 없으면 판매 가능 여부 미확인 → 자동 게시 안 함
     image: imageUrl
+    # 옵션별 가격 (옵션 특가용). 응답에 옵션 가격이 없으면 옵션 특가는 동작하지 않음
+    options_path: options
+    option_item_name: [name]          # 여러 필드면 [color, size] → "블랙 / M"
+    option_item_price: price
+    option_item_sold_out: soldOut
+    option_price_mode: absolute       # absolute: 옵션 최종가 / delta: 기본가 대비 추가금
   allowed_url_hosts: [toss.im, tossshopping.com, toss.shop]
 
 # ── 쿠팡: 쿠팡 파트너스 Open API 상품 검색 ────────────────────────────────
@@ -92,6 +98,18 @@ deal:
     S: {min_rate: 30, min_amount: 20000}
     A: {min_rate: 20, min_amount: 10000}
   publish_grades: [S, A]
+  # 옵션 특가: 같은 상품의 다른 옵션(중간값)보다 40% 이상·5,000원 이상 싼 옵션
+  option_outlier:
+    enabled: true
+    min_rate: 40
+    min_amount: 5000
+    min_options: 3                  # 같은 구성의 옵션이 3개 이상일 때만 판정
+    exclude_keywords: [추가구성, 추가 구성, 추가상품, 단품, 샘플, 체험, 소량, 부속, 리필, 케이스만, 사은품, 증정, 낱개, 액세서리]
+  # 개당 특가: 쿠팡 동일 품목(묶음 수량만 다름)보다 개당 40% 이상 싸고 차액 5,000원 이상
+  unit_price:
+    enabled: true
+    min_rate: 40
+    min_amount: 5000
 
 repost:
   on_grade_upgrade: true        # A → S 로 오르면 재게시

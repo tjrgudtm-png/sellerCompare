@@ -1,24 +1,139 @@
 {
   "_comment": "오프라인 검증용 샘플 쿠팡 검색 응답 (실제 상품/가격 아님). 키 = 검색어",
-  "테스트브랜드 SAMPLE-EB100": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9001, "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB100 블랙", "productPrice": 69900, "productUrl": "https://link.coupang.com/sample/9001", "isRocket": true, "isFreeShipping": true},
-    {"productId": 9002, "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB100 화이트", "productPrice": 64900, "productUrl": "https://link.coupang.com/sample/9002", "isRocket": true, "isFreeShipping": true},
-    {"productId": 9003, "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB200 블랙", "productPrice": 89900, "productUrl": "https://link.coupang.com/sample/9003", "isRocket": true, "isFreeShipping": true}
-  ]}},
-  "테스트브랜드 생수 500ml x 20개": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9101, "productName": "테스트브랜드 생수, 500ml, 20개", "productPrice": 41900, "productUrl": "https://link.coupang.com/sample/9101", "isRocket": true, "isFreeShipping": true},
-    {"productId": 9102, "productName": "테스트브랜드 생수, 500ml, 40개", "productPrice": 69900, "productUrl": "https://link.coupang.com/sample/9102", "isRocket": true, "isFreeShipping": true}
-  ]}},
-  "테스트브랜드 탄산수 2l x 6개": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9201, "productName": "테스트브랜드 탄산수, 2L, 12개", "productPrice": 25900, "productUrl": "https://link.coupang.com/sample/9201", "isRocket": true, "isFreeShipping": true}
-  ]}},
-  "테스트브랜드 섬유유연제 2.5l": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9301, "productName": "테스트브랜드 섬유유연제 2.5L, 2개", "productPrice": 39900, "productUrl": "https://link.coupang.com/sample/9301", "isRocket": true, "isFreeShipping": true}
-  ]}},
-  "테스트브랜드 SAMPLE-TB500": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9501, "productName": "테스트브랜드 텀블러 SAMPLE-TB500 화이트", "productPrice": 26900, "productUrl": "https://link.coupang.com/sample/9501", "isRocket": true, "isFreeShipping": true}
-  ]}},
-  "테스트브랜드 SAMPLE-BL700": {"rCode": "0", "rMessage": "", "data": {"productData": [
-    {"productId": 9601, "productName": "테스트브랜드 블렌더 SAMPLE-BL700", "productPrice": 79000, "productUrl": "https://link.coupang.com/sample/9601", "isRocket": false, "isFreeShipping": false}
-  ]}}
+  "테스트브랜드 SAMPLE-EB100": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9001,
+          "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB100 블랙",
+          "productPrice": 69900,
+          "productUrl": "https://link.coupang.com/sample/9001",
+          "isRocket": true,
+          "isFreeShipping": true
+        },
+        {
+          "productId": 9002,
+          "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB100 화이트",
+          "productPrice": 64900,
+          "productUrl": "https://link.coupang.com/sample/9002",
+          "isRocket": true,
+          "isFreeShipping": true
+        },
+        {
+          "productId": 9003,
+          "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB200 블랙",
+          "productPrice": 89900,
+          "productUrl": "https://link.coupang.com/sample/9003",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  },
+  "테스트브랜드 생수 500ml x 20개": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9101,
+          "productName": "테스트브랜드 생수, 500ml, 20개",
+          "productPrice": 41900,
+          "productUrl": "https://link.coupang.com/sample/9101",
+          "isRocket": true,
+          "isFreeShipping": true
+        },
+        {
+          "productId": 9102,
+          "productName": "테스트브랜드 생수, 500ml, 40개",
+          "productPrice": 69900,
+          "productUrl": "https://link.coupang.com/sample/9102",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  },
+  "테스트브랜드 탄산수 2l x 6개": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9201,
+          "productName": "테스트브랜드 탄산수, 2L, 12개",
+          "productPrice": 25900,
+          "productUrl": "https://link.coupang.com/sample/9201",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  },
+  "테스트브랜드 섬유유연제 2.5l": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9301,
+          "productName": "테스트브랜드 섬유유연제 2.5L, 2개",
+          "productPrice": 39900,
+          "productUrl": "https://link.coupang.com/sample/9301",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  },
+  "테스트브랜드 SAMPLE-TB500": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9501,
+          "productName": "테스트브랜드 텀블러 SAMPLE-TB500 화이트",
+          "productPrice": 26900,
+          "productUrl": "https://link.coupang.com/sample/9501",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  },
+  "테스트브랜드 SAMPLE-BL700": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9601,
+          "productName": "테스트브랜드 블렌더 SAMPLE-BL700",
+          "productPrice": 79000,
+          "productUrl": "https://link.coupang.com/sample/9601",
+          "isRocket": false,
+          "isFreeShipping": false
+        }
+      ]
+    }
+  },
+  "테스트브랜드 제로콜라 355ml x 20개": {
+    "rCode": "0",
+    "rMessage": "",
+    "data": {
+      "productData": [
+        {
+          "productId": 9701,
+          "productName": "테스트브랜드 제로콜라, 355ml, 40개",
+          "productPrice": 39800,
+          "productUrl": "https://link.coupang.com/sample/9701",
+          "isRocket": true,
+          "isFreeShipping": true
+        }
+      ]
+    }
+  }
 }

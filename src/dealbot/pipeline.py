@@ -17,15 +17,23 @@ from .deal_filter import DealFilter
 from .deduplication import Deduplicator, RepostPolicy
 from .http import ExternalError
 from .message_formatter import MessageFormatError, MessageFormatter
-from .models import CoupangOffer, DealCandidate, DealGrade, MatchLevel, MatchResult, TossProduct
+from .models import CoupangOffer, DealCandidate, DealGrade, DealType, MatchLevel, MatchResult, TossProduct
 from .monitoring import RunStats, event, write_health
 from .normalizer import normalize_name, search_query
+from .option_deals import OptionDealDetector
 from .price_comparator import PriceComparator
+from .normalizer import extract_attributes
 from .product_matcher import ProductMatcher, toss_attributes
 from .repository import Repository
 from .toss_collector import TossConfigError, TossSource
 
-GRADE_ORDER = {DealGrade.S: 0, DealGrade.A: 1, DealGrade.NORMAL: 2}
+GRADE_ORDER = {DealGrade.S: 0, DealGrade.A: 1, DealGrade.NORMAL: 9}
+TYPE_ORDER = {DealType.OPTION: 2, DealType.UNIT: 3}
+
+
+def publish_order(c: DealCandidate) -> tuple:
+    rank = GRADE_ORDER[c.comparison.grade] if c.deal_type == DealType.COUPANG else TYPE_ORDER[c.deal_type]
+    return rank, -c.comparison.diff
 
 
 def toss_discount_rate(p: TossProduct) -> float:
@@ -48,6 +56,7 @@ class Pipeline:
         self.policy = RepostPolicy.from_config(cfg)
         self.dedup = Deduplicator(repo, self.policy)
         self.formatter = MessageFormatter.from_config(cfg)
+        self.option_detector = OptionDealDetector.from_config(cfg)
         self.sleep = sleep
 
     # ------------------------------------------------------------------
@@ -63,7 +72,7 @@ class Pipeline:
             if products is None:
                 stats.status = "failed"
             else:
-                deals = self._compare(products, stats)
+                deals = self._detect_option_deals(products, stats) + self._compare(products, stats)
                 self._publish(deals, stats)
                 stats.status = "partial" if stats.failures else "success"
         except Exception as e:  # 실행 단위로 격리 - 스케줄러는 계속 돈다
@@ -100,6 +109,27 @@ class Pipeline:
             if not p.share_url:
                 p.share_url = self.repo.get_share_url(p.product_id)
         return products
+
+    def _detect_option_deals(self, products: list[TossProduct], stats: RunStats) -> list[DealCandidate]:
+        """같은 상품 안 옵션 간 가격 비교 (쿠팡 호출 없음)."""
+        if not self.filter.option.enabled:
+            return []
+        deals = []
+        for p in products:
+            if not p.options or p.sold_out is True:
+                continue
+            cand = self.option_detector.detect(p)
+            if cand is None:
+                continue
+            stats.option_checked += 1
+            self.filter.evaluate(cand)
+            self.repo.save_comparison(stats.run_id, p, None, None, cand.comparison, cand.eligible,
+                                      ["[옵션] " + ", ".join(o.name for o in cand.deal_options)]
+                                      + cand.reject_reasons)
+            if cand.eligible:
+                deals.append(cand)
+        stats.deals_found += len(deals)
+        return deals
 
     def _compare(self, products: list[TossProduct], stats: RunStats) -> list[DealCandidate]:
         recompare = timedelta(minutes=float(self.cfg.get("matching.recompare_after_minutes")))
@@ -146,13 +176,17 @@ class Pipeline:
                 deals.append(cand)
             elif cand.offer and cand.match and self._needs_review(cand):
                 self.repo.add_review(p, cand.offer, cand.match)
-        stats.deals_found = len(deals)
+        stats.deals_found += len(deals)
         return deals
 
     def _evaluate(self, p: TossProduct, offers: list[CoupangOffer]) -> DealCandidate:
         scored: list[tuple[CoupangOffer, MatchResult]] = [(o, self.matcher.match(p, o)) for o in offers]
         high = [(o, m) for o, m in scored if m.level == MatchLevel.HIGH]
         medium = [(o, m) for o, m in scored if m.level == MatchLevel.MEDIUM]
+        if not high and self.filter.unit.enabled:
+            unit = self._unit_candidate(p, scored)
+            if unit is not None and unit.eligible:
+                return unit
         if high:
             # 동일 상품 중 쿠팡 최저 최종가와 비교 (절감액을 과대평가하지 않도록 보수적으로)
             priced = [x for x in high if x[0].final_price is not None]
@@ -167,6 +201,22 @@ class Pipeline:
         comp = self.comparator.compare(p.final_price, offer.final_price)
         return self.filter.evaluate(DealCandidate(p, offer, match, comp))
 
+    def _unit_candidate(self, p: TossProduct, scored) -> DealCandidate | None:
+        """수량만 다른 동일 품목 중 쿠팡 개당 최저가와 개당 가격 비교."""
+        toss_count = toss_attributes(p).count
+        best = None
+        for o, m in scored:
+            if not m.pack_only_diff or o.final_price is None:
+                continue
+            comp = self.comparator.compare_unit(p.final_price, toss_count, o.final_price,
+                                                extract_attributes(o.name).count)
+            if comp.valid and (best is None or comp.coupang_unit < best[2].coupang_unit):
+                best = (o, m, comp)
+        if best is None:
+            return None
+        o, m, comp = best
+        return self.filter.evaluate(DealCandidate(p, o, m, comp, deal_type=DealType.UNIT))
+
     @staticmethod
     def _needs_review(c: DealCandidate) -> bool:
         if c.match.level == MatchLevel.MEDIUM:
@@ -176,13 +226,18 @@ class Pipeline:
 
     # ------------------------------------------------------------------
     def _publish(self, deals: list[DealCandidate], stats: RunStats) -> None:
-        deals.sort(key=lambda c: (GRADE_ORDER[c.comparison.grade], -c.comparison.diff))
+        deals.sort(key=publish_order)
         limit = int(self.cfg.get("publish.max_posts_per_run"))
         published = 0
+        handled: set[str] = set()   # 한 상품이 여러 유형에 걸려도 한 실행에서는 한 번만 게시
         for c in deals:
             if published >= limit:
                 event(logging.INFO, "실행당 게시 상한 도달", limit=limit)
                 break
+            if c.toss.product_id in handled:
+                stats.dedup_skipped += 1
+                continue
+            handled.add(c.toss.product_id)
             self._ensure_share_url(c, stats)
             self.filter.evaluate(c)  # 링크 교체 후 재검증
             if not c.eligible:
@@ -196,7 +251,9 @@ class Pipeline:
                 continue
             post_id, reason = self.dedup.reserve(
                 channel=self.publisher.channel, product_id=c.toss.product_id, name=c.toss.name,
-                option=c.toss.option_text, url=c.toss.url, grade=c.comparison.grade.value,
+                option=(", ".join(o.name for o in c.deal_options) if c.deal_type == DealType.OPTION
+                        else c.toss.option_text),
+                url=c.toss.url, grade=c.grade_label,
                 toss_price=c.comparison.toss_final, coupang_price=c.comparison.coupang_final,
                 message=message)
             if post_id is None:

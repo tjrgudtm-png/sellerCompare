@@ -54,3 +54,39 @@ def test_refuses_unverified_candidate():
     assert not c.eligible
     with pytest.raises(MessageFormatError):
         MessageFormatter().format(c)
+
+
+def test_option_message_format():
+    from dealbot.deal_filter import DealFilter
+    from dealbot.models import TossOption
+    from dealbot.option_deals import OptionDealDetector
+    t = toss(name="테스트브랜드 오버핏 맨투맨", price=24900, discount=None,
+             options=[TossOption(n, p) for n, p in [("블랙 / M", 24900), ("블랙 / L", 24900),
+                                                    ("화이트 / M", 25900), ("그레이 / M", 12900)]])
+    c = DealFilter(allowed_hosts=["toss.im"]).evaluate(OptionDealDetector().detect(t))
+    assert MessageFormatter().format(c).splitlines() == [
+        "🎯 [옵션 특가] 테스트브랜드 오버핏 맨투맨",
+        "👉 특가 옵션: 그레이 / M",
+        "💰 옵션 가격: 12,900원 (배송비 포함)",
+        "📊 다른 옵션 가격: 24,900원 (옵션 3개 중간값)",
+        "💸 차이: 12,000원 (48.2% 저렴)",
+        "🔗 토스쇼핑 바로가기",
+        "https://toss.im/sample/T1",
+        "⚠️ 구매 시 해당 옵션을 선택해 가격을 꼭 확인하세요",
+        "🕒 가격 확인 시각: 2026-10-12 12:00",
+    ]
+
+
+def test_unit_message_format():
+    from dealbot.models import DealType
+    t = toss(name="테스트브랜드 제로콜라 355ml x 20개", price=19900, discount=10000)
+    o = offer(name="테스트브랜드 제로콜라, 355ml, 40개", price=39800)
+    c = DealCandidate(t, o, ProductMatcher().match(t, o), PriceComparator().compare_unit(10000, 20, 39800, 40),
+                      deal_type=DealType.UNIT)
+    c = DealFilter(allowed_hosts=["toss.im"]).evaluate(c)
+    assert MessageFormatter().format(c).splitlines()[:4] == [
+        "📦 [개당 특가] 테스트브랜드 제로콜라 355ml x 20개",
+        "💰 토스쇼핑: 10,000원 (20개, 개당 500원)",
+        "🛒 쿠팡: 39,800원 (40개, 개당 995원)",
+        "📉 개당 49.7% 저렴 (20개 기준 9,900원 이득)",
+    ]
