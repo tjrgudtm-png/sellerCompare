@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dealbot"
+version = "0.1.0"
+description = "토스쇼핑 특가 자동 발굴 및 쿠팡 가격 비교 봇"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "tzdata; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+windows = ["pywin32>=306; sys_platform == 'win32'"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+dealbot = "dealbot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

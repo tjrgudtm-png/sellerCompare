@@ -1,0 +1,124 @@
+# dealbot 설정 예시. 복사해서 config.yaml 로 사용하세요:  copy config.example.yaml config.yaml
+# API 키/토큰은 이 파일에 넣지 말고 .env 파일(또는 환경변수)에 넣으세요.
+
+app:
+  interval_minutes: 10          # 실행 주기(분)
+  db_path: data/dealbot.db
+  log_dir: logs
+  log_level: INFO
+  health_file: data/health.json
+  lock_file: data/dealbot.lock
+  timezone: Asia/Seoul
+  max_products_per_run: 200
+
+http:
+  timeout_seconds: 15
+  max_retries: 3                # 재시도 최대 횟수 (네트워크 오류, 429, 5xx 만)
+  backoff_base_seconds: 2       # 지수형 백오프: 2s, 4s, 8s ...
+  backoff_max_seconds: 60
+  min_interval_seconds: 1.0     # 같은 호스트 요청 간 최소 간격
+  max_concurrency: 2
+
+# ── 토스쇼핑: 토스 쉐어링크 Open API (승인제) ─────────────────────────────
+# 승인 후 쉐어링크 크리에이터 어드민에서 키 발급 + 호출 PC의 공인 IP 등록이 필요합니다.
+# 아래 URL/경로/필드명은 '확인되지 않은 자리표시자'입니다. 공식 문서와
+# `dealbot probe toss` 로 저장한 실제 응답을 보고 반드시 맞춰주세요.
+toss:
+  enabled: true
+  base_url: ""                  # 예: 공식 문서의 Open API 호스트
+  token_url: ""                 # 예: 공식 문서의 OAuth 토큰 발급 URL
+  sources:                      # 수집할 목록 (하루특가/베스트/카테고리 베스트 등)
+    # - name: daily_deal
+    #   path: /<하루특가 목록 경로>
+    #   params: {}
+    # - name: best
+    #   path: /<베스트 목록 경로>
+  pagination:
+    type: page                  # page | cursor | none
+    page_param: page
+    size_param: size
+    page_size: 50
+    first_page: 1
+    cursor_param: cursor
+    next_cursor_path: data.nextCursor
+    max_pages: 5
+  detail:                       # 상품 상세(최신 가격·품절) 조회
+    enabled: false
+    path: /products/{product_id}
+    item_path: data
+    max_per_run: 50
+  share_link:                   # 게시용 쉐어링크 발급 (목록의 productUrl 은 추적되지 않는 일반 링크)
+    enabled: false
+    path: /links
+    id_field: tacaItemId
+    extra_body: {}
+    short_url_path: data.shortUrl
+  field_mapping:                # 응답 JSON 경로 (점 표기)
+    items_path: data.products
+    id: productId
+    name: productName
+    brand: brandName
+    model_code: modelName
+    option: optionName
+    sale_price: price
+    discount_price: discountPrice
+    shipping_fee: deliveryFee   # 없으면 배송비 미확인 → 자동 게시 안 함
+    free_shipping: freeShipping
+    url: productUrl
+    sold_out: soldOut           # 없으면 판매 가능 여부 미확인 → 자동 게시 안 함
+    image: imageUrl
+  allowed_url_hosts: [toss.im, tossshopping.com, toss.shop]
+
+# ── 쿠팡: 쿠팡 파트너스 Open API 상품 검색 ────────────────────────────────
+coupang:
+  enabled: true
+  base_url: https://api-gateway.coupang.com
+  search_path: /v2/providers/affiliate_open_api/apis/openapi/products/search
+  search_limit: 10
+  max_calls_per_hour: 10        # 검색 API 호출 한도. 파트너스 공식 안내 수치로 맞추세요.
+  cache_ttl_minutes: 360        # 같은 검색어 결과 재사용 시간
+  sub_id: ""
+
+matching:
+  min_token_similarity_high: 0.5
+  min_token_similarity_low: 0.25
+  require_explicit_quantity: true   # 수량이 양쪽 모두 미표기면 HIGH 불가
+  recompare_after_minutes: 180      # 가격 변동 없는 상품의 재비교 간격 (쿠팡 호출 절약)
+
+deal:
+  min_saving_rate: 20           # 최소 절감률(%)
+  min_saving_amount: 10000      # 최소 차액(원)
+  grades:
+    S: {min_rate: 30, min_amount: 20000}
+    A: {min_rate: 20, min_amount: 10000}
+  publish_grades: [S, A]
+
+repost:
+  on_grade_upgrade: true        # A → S 로 오르면 재게시
+  min_additional_drop_rate: 5   # 이전 게시가 대비 추가 하락률(%)과
+  min_additional_drop_amount: 3000  # 추가 하락액(원)을 모두 넘으면 재게시
+  same_deal_after_hours: null   # 같은 특가 재게시 허용 시간 (null = 안 함)
+  pending_timeout_minutes: 30
+
+publish:
+  enabled: false                # ⚠️ 최초에는 false (테스트 모드: 게시 예정 메시지만 출력)
+  mode: kakao_pc                # dry_run | approval_queue | kakao_pc | telegram
+  max_attempts: 3
+  retry_backoff_seconds: 2
+  max_posts_per_run: 5
+  approval_queue:
+    dir: data/outbox
+  kakao:
+    room_name: ""               # PC 카카오톡 채팅방 창 제목(오픈채팅방 이름)과 정확히 동일하게
+    open_chat_url: https://open.kakao.com/o/gcmpd0Ri   # 참고용 (링크로는 자동 입장/식별 불가)
+    send_mode: assist           # assist: 입력창에 채우고 사람이 Enter / auto: 자동 전송(계정 제한 위험)
+    auto_send_accept_risk: false
+    min_seconds_between_posts: 30
+    max_posts_per_hour: 10
+  telegram:
+    api_base: https://api.telegram.org
+
+message:
+  max_length: 1000
+  max_name_length: 60
+  footer: ""                    # 예: 쉐어링크 사용 시 광고/수수료 고지 문구

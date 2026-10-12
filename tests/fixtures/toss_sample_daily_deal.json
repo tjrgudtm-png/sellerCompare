@@ -1,0 +1,25 @@
+{
+  "_comment": "오프라인 검증용 샘플 데이터 (실제 상품/가격 아님). 실제 응답 구조는 API 승인 후 dealbot probe toss 로 확인.",
+  "data": {
+    "products": [
+      {"productId": "SAMPLE-001", "productName": "테스트브랜드 무선 이어폰 SAMPLE-EB100 블랙", "brandName": "테스트브랜드",
+       "price": 59900, "discountPrice": 39900, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-001", "soldOut": false},
+      {"productId": "SAMPLE-002", "productName": "테스트브랜드 생수 500ml x 20개", "brandName": "테스트브랜드",
+       "price": 35900, "discountPrice": 29900, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-002", "soldOut": false},
+      {"productId": "SAMPLE-003", "productName": "테스트브랜드 탄산수 2L x 6개", "brandName": "테스트브랜드",
+       "price": 15900, "discountPrice": 9900, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-003", "soldOut": false},
+      {"productId": "SAMPLE-004", "productName": "테스트브랜드 섬유유연제 2.5L", "brandName": "테스트브랜드",
+       "price": 25900, "discountPrice": 12900, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-004", "soldOut": false},
+      {"productId": "SAMPLE-005", "productName": "테스트브랜드 전기포트 SAMPLE-KT200", "brandName": "테스트브랜드",
+       "price": 49900, "discountPrice": 19900, "productUrl": "https://toss.im/sample/products/SAMPLE-005", "soldOut": false},
+      {"productId": "SAMPLE-006", "productName": "테스트브랜드 공기청정기 SAMPLE-AP300", "brandName": "테스트브랜드",
+       "price": 199000, "discountPrice": 99000, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-006", "soldOut": true},
+      {"productId": "SAMPLE-007", "productName": "테스트브랜드 텀블러 SAMPLE-TB500 화이트", "brandName": "테스트브랜드",
+       "price": 25900, "discountPrice": 22900, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-007", "soldOut": false},
+      {"productId": "SAMPLE-008", "productName": "테스트브랜드 블렌더 SAMPLE-BL700", "brandName": "테스트브랜드",
+       "price": 89000, "discountPrice": 49000, "deliveryFee": 0, "productUrl": "https://toss.im/sample/products/SAMPLE-008", "soldOut": false},
+      {"productId": "SAMPLE-009", "productName": "가격 누락 샘플 상품", "brandName": "테스트브랜드",
+       "productUrl": "https://toss.im/sample/products/SAMPLE-009", "soldOut": false}
+    ]
+  }
+}
